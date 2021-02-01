@@ -1,0 +1,18 @@
+#!/bin/bash -x
+
+IN="$(realpath $1)"
+TEMPL="$(realpath $0).templ"
+TMP_DIR="$(mktemp -d -t epub2pdb-XXXXXXXXXX)"
+cd $TMP_DIR
+
+pandoc "$IN" -s -t latex --extract-media=. -o out.tex
+cat "$TEMPL" > work.tex
+sed '1,/^\\begin{document}/d' out.tex |  sed '1d'  >> work.tex
+sed '/^\\paragraph{\*\*\*}/,/^\\hypertarget/{//!d}' -i work.tex
+sed '/^\\paragraph{\*\*\*}/d' -i work.tex
+sed '/^\\emph{\\\\/,+1d' -i work.tex
+latexmk work.tex
+cp work.pdf "$IN.pdf"
+
+rm -rf $TMP_DIR
+
